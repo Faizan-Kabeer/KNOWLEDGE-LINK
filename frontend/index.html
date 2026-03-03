@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KnowledgeLink — KG Explorer</title>
+  <meta name="description" content="Explore the FB15k-237 knowledge graph, predict missing links, and visualise GATH attention-based explanations." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ── Top Navigation ─────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-icon">⬡</span>
+      <span class="brand-name">KnowledgeLink</span>
+      <span class="brand-sub">FB15k-237 · GATH Model</span>
+    </div>
+    <div class="topbar-status">
+      <span id="status-dot" class="status-dot idle"></span>
+      <span id="status-text">Loading…</span>
+    </div>
+  </header>
+
+  <!-- ── Main Layout ────────────────────────────────────────────── -->
+  <main class="layout">
+
+    <!-- LEFT PANEL: Search + Controls -->
+    <aside class="panel panel-left" id="panel-left">
+      <h2 class="panel-title">Entity Search</h2>
+
+      <div class="search-wrap">
+        <input
+          id="entity-search"
+          type="text"
+          class="search-input"
+          placeholder="Type to search entities…"
+          autocomplete="off"
+        />
+        <span class="search-icon">⌕</span>
+      </div>
+
+      <ul id="search-results" class="result-list"></ul>
+
+      <!-- Relation selector (shown once entity is selected) -->
+      <div id="relation-section" class="relation-section hidden">
+        <h3 class="sub-title">Relation</h3>
+        <div class="search-wrap">
+          <input
+            id="relation-search"
+            type="text"
+            class="search-input"
+            placeholder="Filter relations…"
+            autocomplete="off"
+          />
+        </div>
+        <ul id="relation-list" class="result-list relation-list"></ul>
+
+        <button id="predict-btn" class="btn btn-primary" disabled>
+          ✦ Predict Missing Links
+        </button>
+      </div>
+
+      <!-- Selected state display -->
+      <div id="selection-display" class="selection-display hidden">
+        <div class="chip" id="chip-head"></div>
+        <div class="chip chip-rel" id="chip-rel"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: Graph Canvas -->
+    <section class="panel panel-center" id="panel-center">
+      <div class="graph-header">
+        <span id="graph-title" class="graph-title">Select an entity to explore</span>
+        <div class="graph-legend">
+          <span class="legend-dot center"></span>Selected
+          <span class="legend-dot neighbor"></span>Neighbor
+          <span class="legend-dot predicted"></span>Predicted
+          <span class="legend-dot explained"></span>Influential
+        </div>
+      </div>
+      <svg id="graph-svg"></svg>
+      <div id="graph-tooltip" class="tooltip hidden"></div>
+    </section>
+
+    <!-- RIGHT PANEL: Predictions + Explainability -->
+    <aside class="panel panel-right" id="panel-right">
+
+      <!-- Predictions -->
+      <div id="predict-section">
+        <h2 class="panel-title">Predictions</h2>
+        <div id="predict-placeholder" class="placeholder-msg">
+          Select an entity and relation, then click <strong>Predict</strong>.
+        </div>
+        <ol id="predict-list" class="predict-list hidden"></ol>
+      </div>
+
+      <!-- Divider -->
+      <div class="panel-divider"></div>
+
+      <!-- Explainability -->
+      <div id="explain-section">
+        <h2 class="panel-title">
+          Explainability
+          <span class="panel-title-hint">Click a prediction to explain</span>
+        </h2>
+        <div id="explain-placeholder" class="placeholder-msg">
+          Click any prediction to see which neighbors influenced it.
+        </div>
+
+        <div id="explain-content" class="hidden">
+          <p id="explain-summary" class="explain-summary"></p>
+
+          <!-- Attention heatmap -->
+          <h3 class="sub-title">Attention Heatmap <span class="hint">(neighbors × layers)</span></h3>
+          <div id="heatmap-wrap">
+            <canvas id="heatmap-canvas"></canvas>
+            <div id="heatmap-labels" class="heatmap-labels"></div>
+          </div>
+
+          <!-- Top influential neighbors -->
+          <h3 class="sub-title" style="margin-top:20px">Top Influential Neighbors</h3>
+          <ul id="influence-list" class="influence-list"></ul>
+        </div>
+      </div>
+
+    </aside>
+  </main>
+
+  <!-- D3.js v7 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script src="/static/app.js"></script>
+</body>
+</html>
