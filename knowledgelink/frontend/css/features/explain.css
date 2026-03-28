@@ -1,0 +1,133 @@
+/* ── Explainability ──────────────────────────────────────────────── */
+.placeholder-msg { 
+  padding: 48px 24px; text-align: center; color: var(--white-faint); font-size: 11px; line-height: 1.8; border: 1px dashed var(--white-faint); margin: 10px 0;
+}
+.explain-summary { background: var(--neon-dim); border-left: 3px solid var(--neon); padding: 16px; margin-bottom: 24px; font-size: 13px; line-height: 1.6; color: var(--white); }
+
+.hist-label {
+  font-size: 8px; font-weight: 800; font-family: var(--mono);
+  letter-spacing: 0.15em; text-transform: uppercase;
+  border: 1px solid; padding: 1px 7px; margin-left: 8px;
+  vertical-align: middle;
+}
+
+#heatmap-wrap { margin-bottom: 24px; background: #000; border: var(--laser); padding: 16px; position: relative; }
+
+.heatmap-matrix { display: flex; gap: 6px; width: 100%; align-items: flex-end; }
+.hm-y-labels { display: flex; flex-direction: column; gap: 4px; justify-content: flex-end; width: 32px; flex-shrink: 0; }
+.hm-y-label { height: 28px; font-size: 11px; color: var(--white-faint); font-family: var(--mono); display: flex; align-items: center; justify-content: flex-end; padding-right: 6px; }
+
+.hm-cols-wrap { display: flex; gap: 4px; flex-grow: 1; overflow: hidden; }
+.hm-col { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: 4px; align-items: center; }
+.hm-col-name { font-size: 11px; color: var(--white-dim); text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; text-align: center; margin-bottom: 4px; font-weight: 600; cursor: default; }
+
+.hm-cell {
+  width: 100%; height: 26px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.05); background: rgba(0,0,0,0.5);
+  display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+}
+.hm-cell-bg { position: absolute; inset: 0; background: var(--neon); z-index: 1; transition: opacity 0.5s; opacity: 0; }
+.hm-cell-bg.glow { box-shadow: inset 0 0 10px var(--neon-glow); }
+.hm-cell-val { position: relative; z-index: 2; font-size: 11px; color: var(--white); font-family: var(--mono); font-weight: 800; text-shadow: 0 1px 3px #000, 0 0 6px #000; }
+.influence-rank { color: var(--neon); font-weight: 900; margin-right: 12px; font-family: var(--mono); width: 28px; font-size: 12px; }
+.influence-name { color: var(--white); flex-grow: 1; font-size: 12px; text-transform: uppercase; font-weight: 600; }
+.influence-bar-wrap { width: 80px; height: 2px; background: rgba(255,255,255,0.05); margin: 0 16px; }
+.influence-bar { height: 100%; background: var(--neon); box-shadow: 0 0 8px var(--neon); }
+.influence-val { font-size: 12px; min-width: 46px; text-align: right; font-family: var(--mono); color: var(--neon); font-weight: 700; }
+
+/* Heatmap Labels Overlay */
+.heatmap-labels { display: flex; flex-direction: column; width: 100%; }
+.heatmap-labels span { font-size: 10px; font-family: var(--mono); color: var(--white-faint); }
+
+/* ── Explainability In-Page Bottom Strip ─────────────────────────── */
+.explain-bottom {
+  width: 100%;
+  max-height: 0;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-panel);
+  border-top: 2px solid transparent;
+  box-shadow: none;
+  transition: max-height 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+              border-color 0.4s ease,
+              box-shadow 0.4s ease;
+}
+
+.explain-bottom.open {
+  max-height: 3000px;   /* generous ceiling for tall lists */
+  border-top-color: var(--neon);
+  box-shadow: 0 -6px 40px rgba(57, 255, 20, 0.14);
+}
+
+.explain-bottom-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 28px;
+  border-bottom: 1px solid var(--neon-dim);
+  flex-shrink: 0;
+  background: rgba(0,0,0,0.55);
+}
+
+.explain-bottom-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--neon);
+  text-transform: uppercase;
+  letter-spacing: 0.35em;
+}
+
+.explain-bottom-icon {
+  font-size: 15px;
+  color: var(--neon);
+  filter: drop-shadow(0 0 6px var(--neon));
+}
+
+.explain-drawer-close {
+  background: transparent;
+  border: 1px solid var(--white-faint);
+  color: var(--white-faint);
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.explain-drawer-close:hover {
+  border-color: var(--neon);
+  color: var(--neon);
+  box-shadow: 0 0 12px var(--neon-dim);
+}
+
+.explain-bottom-body {
+  padding: 14px 28px 120px;
+  overflow: visible;
+}
+
+.explain-bottom-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 12px;
+}
+
+@media (max-width: 900px) {
+  .explain-bottom-cols { grid-template-columns: 1fr; }
+}
+
+.explain-placeholder-inline {
+  padding: 20px;
+  margin: 0;
+  border: 1px solid var(--neon-dim);
+  color: var(--neon);
+  font-family: var(--mono);
+  text-align: center;
+  animation: pulse 1.2s infinite alternate;
+}

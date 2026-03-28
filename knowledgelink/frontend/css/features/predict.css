@@ -1,0 +1,8 @@
+/* ── Predictions ──────────────────────────────────────────────────── */
+.predict-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.predict-name { font-weight: 800; color: var(--white); text-transform: uppercase; font-size: 10px; }
+.predict-score { color: var(--neon); font-family: var(--mono); font-weight: 700; }
+.predict-known-badge { font-size: 8px; background: var(--white-faint); color: #000; padding: 1px 6px; text-transform: uppercase; font-weight: 800; }
+
+.predict-bar-wrap { height: 2px; background: rgba(255,255,255,0.05); width: 100%; overflow: hidden; }
+.predict-bar { height: 100%; background: var(--neon); box-shadow: 0 0 8px var(--neon); }

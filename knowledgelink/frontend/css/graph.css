@@ -1,0 +1,58 @@
+/* ── Graph ───────────────────────────────────────────────────────── */
+#graph-svg { width: 100%; height: 100%; display: block; background: #000; }
+
+.graph-header { 
+  position: absolute; top: 20px; left: 20px; right: 20px; 
+  display: flex; justify-content: space-between; align-items: flex-start; z-index: 100; pointer-events: none;
+}
+.graph-title, .graph-legend { 
+  background: rgba(0,0,0,0.9); border: var(--laser); backdrop-filter: blur(12px); padding: 10px 16px; font-family: var(--mono); font-size: 10px; color: var(--white);
+}
+.graph-legend { display: flex; align-items: center; gap: 16px; pointer-events: auto; }
+.legend-dot { width: 8px; height: 8px; flex-shrink: 0; }
+.legend-dot.selected { background: var(--node-selected); box-shadow: 0 0 10px var(--node-selected); }
+.legend-dot.neighbor { background: var(--node-neighbor); }
+.legend-dot.predicted { background: var(--node-predicted); box-shadow: 0 0 10px var(--node-predicted); }
+.legend-dot.influential { background: var(--node-influential); box-shadow: 0 0 10px var(--node-influential); }
+
+/* ── D3 Graph Elements ───────────────────────────────────────────── */
+.links line {
+  stroke: var(--link-known);
+  stroke-opacity: 0.6;
+  transition: stroke-opacity 0.3s;
+}
+.links line.link-predicted {
+  stroke: var(--node-predicted);
+  stroke-width: 2.5;
+  stroke-dasharray: 4 4;
+  stroke-opacity: 1;
+  filter: drop-shadow(0 0 5px var(--node-predicted));
+  animation: dash 1s linear infinite;
+}
+@keyframes dash { from { stroke-dashoffset: 20; } to { stroke-dashoffset: 0; } }
+
+.node circle {
+  stroke: var(--bg);
+  stroke-width: 1.5;
+  transition: r 0.3s, filter 0.3s;
+}
+.node text {
+  fill: var(--white-dim);
+  font-family: var(--mono);
+  font-size: 9px;
+  pointer-events: none;
+  text-anchor: middle;
+}
+.node:hover circle {
+  stroke: var(--node-selected);
+  stroke-width: 2;
+}
+.node:hover text {
+  fill: var(--white);
+  font-weight: 700;
+}
+
+.tooltip {
+  position: absolute; pointer-events: none; background: #000; border: var(--laser-hi); padding: 8px 12px;
+  font-family: var(--mono); font-size: 11px; color: var(--neon); z-index: 5000; box-shadow: 0 0 30px #000; text-transform: uppercase; letter-spacing: 0.05em;
+}

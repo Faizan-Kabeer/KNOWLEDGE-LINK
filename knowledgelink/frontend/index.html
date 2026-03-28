@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KnowledgeLink — KG Explorer</title>
+  <meta name="description" content="Explore the FB15k-237 knowledge graph, predict missing links, and visualise GATCE attention-based explanations." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/static/style.css?v=2.5" />
+</head>
+<body>
+
+  <!-- ── Top Navigation ─────────────────────────────────────────── -->
+  <header class="topbar">
+    <div class="topbar-brand">
+      <span class="brand-icon">⬡</span>
+      <span class="brand-name">KnowledgeLink</span>
+    </div>
+    
+    <nav class="topbar-nav" id="main-nav">
+      <button class="nav-btn active" data-target="explorer-view">Explorer</button>
+      <button class="nav-btn" data-target="training-view">Train Model</button>
+    </nav>
+    
+    <div class="topbar-status">
+      <span id="status-dot" class="status-dot idle"></span>
+      <span id="status-text">Loading…</span>
+    </div>
+    <button id="reset-btn" class="reset-btn hidden" title="Reset everything">⟳ Reset</button>
+  </header>
+
+  <!-- ── Main Layout (Explorer View) ────────────────────────────── -->
+  <main class="explorer-view view-section active" id="explorer-view">
+
+    <!-- Top: three-panel grid -->
+    <div class="layout" id="layout-panels">
+
+    <!-- LEFT PANEL: Search + Controls -->
+    <aside class="panel panel-left" id="panel-left">
+      
+      <!-- Model Selector -->
+      <div class="model-select-wrap">
+        <label for="model-select" class="panel-title" style="margin-bottom:16px; display:block">Active Model</label>
+        <div style="display: flex; gap: 8px; align-items: center; margin-bottom: 24px;">
+          <select id="model-select" class="search-input" style="flex: 1; margin-bottom: 0;"></select>
+          <button id="delete-model-btn" class="delete-model-btn hidden" title="Delete selected model">🗑</button>
+        </div>
+      </div>
+
+      <div class="panel-divider" style="margin-top: 0; margin-bottom: 24px; opacity: 1; height: 1px; background: var(--neon-dim); box-shadow: none;"></div>
+
+      <h2 class="panel-title">Entity Search</h2>
+
+      <div class="search-wrap">
+        <input
+          id="entity-search"
+          type="text"
+          class="search-input"
+          placeholder="Type to search entities…"
+          autocomplete="off"
+        />
+        <span class="search-icon">⌕</span>
+      </div>
+
+      <ul id="search-results" class="result-list"></ul>
+
+      <!-- Relation selector (shown once entity is selected) -->
+      <div id="relation-section" class="relation-section hidden">
+        <h2 class="panel-title" style="margin-top: 24px;">Relation Search</h2>
+        <div class="search-wrap">
+          <input
+            id="relation-search"
+            type="text"
+            class="search-input"
+            placeholder="Filter relations…"
+            autocomplete="off"
+          />
+        </div>
+        <ul id="relation-list" class="result-list relation-list"></ul>
+
+        <button id="predict-btn" class="btn btn-primary" disabled>
+          ✦ Predict Missing Links
+        </button>
+      </div>
+
+      <!-- Selected state display -->
+      <div id="selection-display" class="selection-display hidden">
+        <div class="chip" id="chip-head"></div>
+        <div class="chip chip-rel" id="chip-rel"></div>
+      </div>
+    </aside>
+
+    <!-- CENTER: Graph Canvas -->
+    <section class="panel panel-center" id="panel-center">
+      <div class="graph-header">
+        <span id="graph-title" class="graph-title">Select an entity to explore</span>
+        <div class="graph-legend">
+          <span class="legend-dot selected"></span>Selected
+          <span class="legend-dot neighbor"></span>Neighbor
+          <span class="legend-dot predicted"></span>Predicted
+          <span class="legend-dot influential"></span>Influential
+        </div>
+      </div>
+      <svg id="graph-svg">
+        <defs>
+          <linearGradient id="grad-selected" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#39FF14;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#059212;stop-opacity:1" />
+          </linearGradient>
+          <linearGradient id="grad-neighbor" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#94a3b8;stop-opacity:1" />
+          </linearGradient>
+          <linearGradient id="grad-predicted" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#00D7FF;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#0078FF;stop-opacity:1" />
+          </linearGradient>
+          <linearGradient id="grad-influential" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" style="stop-color:#FFFF00;stop-opacity:1" />
+            <stop offset="100%" style="stop-color:#FFCC00;stop-opacity:1" />
+          </linearGradient>
+        </defs>
+      </svg>
+      <div id="graph-tooltip" class="tooltip hidden"></div>
+    </section>
+
+    <!-- RIGHT PANEL: Predictions + Explainability -->
+    <aside class="panel panel-right" id="panel-right">
+
+      <!-- Predictions -->
+      <div id="predict-section">
+        <h2 class="panel-title">Predictions</h2>
+        <div id="predict-placeholder" class="placeholder-msg">
+          Select an entity and relation, then click <strong>Predict</strong>.
+        </div>
+        <ol id="predict-list" class="predict-list hidden"></ol>
+      </div>
+
+    </aside>
+    </div><!-- /#layout-panels -->
+
+    <!-- Bottom: Explainability strip (slides up) -->
+    <div class="explain-bottom" id="explain-bottom">
+      <div class="explain-bottom-header">
+        <div class="explain-bottom-title">
+          <span class="explain-bottom-icon">◈</span>
+          Explainability
+        </div>
+        <button class="explain-drawer-close" id="explain-drawer-close" aria-label="Close">✕</button>
+      </div>
+      <div class="explain-bottom-body">
+        <div id="explain-placeholder" class="placeholder-msg explain-placeholder-inline">
+          Fetching explanation…
+        </div>
+        <div id="explain-content" class="hidden">
+          <p id="explain-summary" class="explain-summary"></p>
+          <div class="explain-bottom-cols">
+            <!-- Attention Heatmap -->
+            <div>
+              <h3 class="sub-title" style="margin-bottom:12px;">Attention Heatmap</h3>
+              <div id="heatmap-wrap">
+                <div id="heatmap-matrix" class="heatmap-matrix"></div>
+              </div>
+              <div id="layer-chart-wrap" style="margin-top:36px;">
+                <h3 class="sub-title" style="margin-bottom:14px;">Layer Contribution</h3>
+                <svg id="layer-chart" width="100%" height="80"></svg>
+              </div>
+              <div id="hist-wrap" style="margin-top:36px;">
+                <h3 class="sub-title" style="margin-bottom:14px;">
+                  Attention Distribution
+                  <span id="hist-label" class="hist-label"></span>
+                </h3>
+                <svg id="importance-hist" width="100%" height="115"></svg>
+              </div>
+            </div>
+            <!-- Top influential neighbors -->
+            <div>
+              <h3 class="sub-title">Top Influential Neighbors</h3>
+              <ul id="influence-list" class="influence-list"></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div><!-- /#explain-bottom -->
+
+  </main>
+
+  <!-- ── Training View ─────────────────────────────────────────── -->
+  <main class="layout-training view-section" id="training-view">
+    <div class="training-container">
+      <h2 class="training-title">Train Custom GATCE Model</h2>
+      <p class="training-desc">Upload a dataset file (.txt, .tsv, .csv) with tab-separated head, relation, tail columns.</p>
+      
+      <div class="training-form">
+        <div class="form-group">
+          <label class="sub-title">Model Name</label>
+          <input type="text" id="train-model-name" class="search-input" placeholder="e.g., custom_dataset" />
+        </div>
+        <div class="form-group">
+          <label class="sub-title">Dataset File</label>
+          <input type="file" id="train-file-upload" class="search-input" accept=".txt,.tsv,.csv" />
+        </div>
+        <div class="form-group">
+          <label class="sub-title">Entity ID-to-Name Mapping File <span class="hint">(Optional)</span></label>
+          <p class="hint-small">Tab-separated (.tsv or .txt) file where the first two columns are ID and Name.</p>
+          <input type="file" id="train-mapping-upload" class="search-input" accept=".tsv,.txt" />
+        </div>
+        <button id="train-start-btn" class="btn btn-primary">Start Training</button>
+      </div>
+
+      <div class="training-progress-area hidden" id="training-progress-area">
+        <div class="progress-header">
+          <span id="train-status-text" class="status-message">Initializing...</span>
+          <span id="train-epoch-text" class="epoch-message"></span>
+        </div>
+        
+        <div class="train-bar-wrap">
+           <div id="train-progress-bar" class="train-progress-bar" style="width: 0%"></div>
+        </div>
+
+        <div class="train-metrics">
+           <div class="metric-box">
+             <span class="metric-label">Loss</span>
+             <span id="metric-loss" class="metric-value">--</span>
+           </div>
+        </div>
+        
+        <div id="train-log" class="train-log"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- D3.js v7 -->
+  <script src="https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js"></script>
+  <script type="module" src="/static/main.js"></script>
+</body>
+</html>

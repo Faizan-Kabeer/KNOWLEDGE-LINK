@@ -1,0 +1,87 @@
+/* ── Topbar ──────────────────────────────────────────────────────── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 56px;
+  background: var(--bg-panel);
+  border-bottom: var(--laser);
+  backdrop-filter: blur(20px);
+  z-index: 1000;
+  position: relative;
+}
+.topbar-brand { display: flex; align-items: center; gap: 12px; }
+.brand-name { font-size: 14px; font-weight: 900; letter-spacing: 0.25em; text-transform: uppercase; color: var(--white); }
+.brand-icon { color: var(--neon); font-size: 22px; filter: drop-shadow(0 0 8px var(--neon)); }
+.brand-sub { font-size: 9px; color: var(--white-faint); font-family: var(--mono); border: 1px solid var(--white-faint); padding: 1px 10px; margin-left: 8px; font-weight: 500; }
+
+.topbar-status { display: flex; align-items: center; gap: 10px; font-size: 10px; color: var(--white-dim); font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.05em; }
+.status-dot { width: 6px; height: 6px; border-radius: 0; transition: all 0.3s; }
+.status-dot.ok { background: var(--neon); box-shadow: 0 0 10px var(--neon); }
+.status-dot.loading { background: var(--white); animation: pulse 0.8s infinite alternate; }
+.status-dot.idle { background: var(--white-faint); }
+.status-dot.warn { background: #ff3c3c; box-shadow: 0 0 10px #ff3c3c; }
+@keyframes pulse { from { opacity: 0.2; transform: scale(0.8); } to { opacity: 1; transform: scale(1.1); } }
+
+/* ── Navigation ──────────────────────────────────────────────────── */
+.topbar-nav { display: flex; gap: 4px; height: 100%; align-items: center; }
+.nav-btn { 
+  background: transparent; border: none; color: var(--white-faint); padding: 0 24px; height: 100%;
+  cursor: pointer; font-weight: 700; text-transform: uppercase; font-size: 10px; letter-spacing: 0.15em; transition: all 0.2s;
+  position: relative;
+}
+.nav-btn:hover { color: var(--white); }
+.nav-btn.active { color: var(--neon); }
+.nav-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--neon); box-shadow: 0 0 12px var(--neon); }
+
+/* ── Layout ──────────────────────────────────────────────────────── */
+
+/* Explorer view: scrollable column so the explainability strip sits below the panels */
+.explorer-view {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 56px);
+  width: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
+
+/* The three-panel grid — always full viewport height, never shrinks */
+.layout {
+  display: grid;
+  grid-template-columns: 320px 1fr 360px;
+  height: calc(100vh - 56px);
+  flex-shrink: 0;   /* grid stays full height even when explain-bottom opens */
+  gap: 0;
+  position: relative;
+}
+
+.view-section { display: none; width: 100%; height: 100%; }
+.view-section.active { display: flex; flex-direction: column; }
+
+
+/* ── Panels ──────────────────────────────────────────────────────── */
+.panel {
+  background: var(--bg-panel);
+  border-right: var(--laser);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+  z-index: 10;
+}
+.panel-left  { padding: 32px 24px 80px 24px; overflow-y: auto; scrollbar-gutter: stable; }
+.panel-right { padding: 32px 24px 80px 24px; overflow: hidden; }
+.panel-right { border-right: none; border-left: var(--laser); }
+.panel-center { background: #000; border-right: var(--laser); padding: 0; position: relative; z-index: 5; }
+
+.panel-title {
+  font-size: 10px; font-weight: 800; color: var(--neon); text-transform: uppercase; letter-spacing: 0.35em; margin-bottom: 24px;
+  display: flex; justify-content: space-between; align-items: baseline;
+}
+.panel-title-hint { font-size: 9px; color: var(--white-faint); letter-spacing: 0; text-transform: none; font-weight: 400; }
+.sub-title { font-size: 9px; font-weight: 700; color: var(--white-dim); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 10px; display: block; }
+
+.panel-divider { height: 1px; background: var(--white-faint); opacity: 0.08; margin: 32px -24px; }

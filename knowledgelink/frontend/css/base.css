@@ -1,0 +1,53 @@
+/* ── Cyber-Minimalist Design System ────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #000000;
+  --bg-panel:    rgba(5, 5, 5, 0.95);
+  --bg-card:     #080808;
+  
+  --neon:        #39FF14;
+  --neon-glow:   rgba(57, 255, 20, 0.4);
+  --neon-dim:    rgba(57, 255, 20, 0.12);
+  
+  --white:       #FFFFFF;
+  --white-dim:   rgba(255, 255, 255, 0.7);
+  --white-faint: rgba(255, 255, 255, 0.25);
+
+  --font: 'Inter', -apple-system, system-ui, sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+
+  --node-selected:   #39FF14;
+  --node-neighbor:   #FFFFFF;
+  --node-predicted:  #00D7FF;
+  --node-influential: #FFFF00;
+  
+  --link-known:     rgba(255, 255, 255, 0.15);
+  --link-predicted: var(--node-predicted);
+
+  --laser: 1px solid var(--neon-dim);
+  --laser-hi: 1px solid var(--neon);
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  background: var(--bg);
+  color: var(--white);
+  font-family: var(--font);
+  font-size: 13px;
+  overflow: hidden;
+  background-image: 
+    linear-gradient(rgba(57, 255, 20, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57, 255, 20, 0.03) 1px, transparent 1px);
+  background-size: 60px 60px;
+}
+
+/* ── Utility ─────────────────────────────────────────────────────── */
+.hidden { display: none !important; }
+.hint { font-size: 9px; color: var(--white-faint); font-weight: 400; text-transform: none; letter-spacing: 0; }
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #000; }
+::-webkit-scrollbar-thumb { background: var(--neon-dim); }
+::-webkit-scrollbar-thumb:hover { background: var(--neon); }
