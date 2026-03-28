@@ -1,152 +1,40 @@
-# KnowledgeLink
+# Pro-Max: Knowledge Graph Link Prediction
 
-A full-stack Knowledge Graph Explorer powered by the **GATH** (Graph Attention with Hadamard + ConvE) model trained on **FB15k-237**.
+This directory contains the core training implementation and the full-stack web application for the **GATCE (Graph Attention with Hadamard + ConvE)** Knowledge Graph link prediction project.
 
-## Features
+## Directory Structure
 
-| Feature | Description |
-|---|---|
-| 🔍 **Entity Search** | Instant substring search across 14,541 entities |
-| 🕸️ **Graph Neighborhood** | D3.js force-directed graph of 1-hop edges |
-| ✦ **Link Prediction** | Top-K tail predictions with confidence bars |
-| 🔥 **Explainability** | Per-layer GATH attention heatmap + ranked neighbor influence |
-| 🎨 **Premium UI** | Dark glassmorphism, animated predicted edges, responsive |
-
----
-
-## Project Structure
-
-```
-knowledgelink/
-├── backend/
-│   ├── config.py                  # Hyperparams & paths (must match training)
-│   ├── main.py                    # FastAPI app — run this
-│   ├── model/
-│   │   ├── encoder.py             # GATHLayer + GATHEncoder (returns attention weights)
-│   │   ├── decoder.py             # ConvEDecoder
-│   │   └── gath.py                # GATH — forward() and forward_explain()
-│   ├── services/
-│   │   ├── data_service.py        # Load FB15k-237, entity search, adjacency
-│   │   └── predict_service.py     # Inference + explainability
-│   └── requirements.txt
-├── frontend/
-│   ├── index.html                 # App shell (3-panel layout)
-│   ├── style.css                  # Dark theme + animations
-│   └── app.js                     # D3.js graph + all UI logic
-└── README.md
+```text
+pro-max/
+├── link-prediction-gatce-final.ipynb  # Core ML Training Notebook
+├── knowledgelink/                    # Full-Stack Web Application
+└── README.md                         # This file
 ```
 
 ---
 
-## Setup
+## 1. The ML Model: `link-prediction-gatce-final.ipynb`
 
-### 1. Install dependencies
+This Jupyter Notebook encapsulates the entire research, data processing, and training pipeline for the link prediction model.
 
-```bash
-cd knowledgelink
-pip install -r backend/requirements.txt
-```
-
-### 2. Place Data
-
-Download **FB15k-237** and place the three split files under `knowledgelink/data/`:
-
-```
-knowledgelink/
-└── data/
-    ├── train.txt
-    ├── valid.txt
-    └── test.txt
-```
-
-> The dataset is available on [Kaggle](https://www.kaggle.com/datasets/groceryheist/fb13k-237) or directly from the original paper repository.
-
-### 3. Save and Place the Trained Checkpoint
-
-At the end of training (in Kaggle), save the model using:
-
-```python
-import torch
-
-save_path = '/kaggle/working/gath_model.pth'
-
-checkpoint = {
-    'model_state_dict': model.state_dict(),
-    'ent2id': ent2id,
-    'rel2id': rel2id,
-    'embed_dim': EMBED_DIM,
-    'num_layers': NUM_LAYERS,
-    'num_heads': NUM_HEADS
-}
-
-torch.save(checkpoint, save_path)
-```
-
-Then download `gath_model.pth` from Kaggle and place it as:
-
-```
-knowledgelink/checkpoint.pt
-```
-
-> **Note:** The filename in `config.py` is `checkpoint.pt` by default. Either rename the file or update `Config.checkpoint_path = "gath_model.pth"` to match.
-
-The backend automatically reads `ent2id`, `rel2id`, `embed_dim`, `num_layers`, and `num_heads` directly from the checkpoint — no manual config editing required.
+### Key Details
+- **Architecture**: A bespoke **GATCE (Graph Attention with Hadamard + ConvE)** model. It uses a graph encoder with multi-head attention (GATLayer) to propagate structural edge information, combined with a `ConvE` (2D Convolution) decoder to score (head, relation, tail) triples.
+- **Dataset**: Trained and evaluated on the standard **FB15k-237** Knowledge Graph dataset (14,541 entities, 237 original relations). The notebook constructs a bidirectional graph to handle inverse relations.
+- **Frameworks**: Built using **PyTorch** and **PyTorch Geometric (PyG)**.
+- **Training Strategy**: Uses 1-N multi-hot scoring for efficiency, optimized via AdamW with mixed-precision training (`torch.amp`).
+- **Final Metrics**: Achieves a Test MRR of ~0.2883 and Hits@10 of ~45.56%.
+- **Outputs**: The notebook exports `best_gatce_model.pth` (the model checkpoint) and `mappings.pkl` (entity and relation string-to-ID mappings) which are consumed by the backend application.
 
 ---
 
-## Running the App
+## 2. The Application: `knowledgelink/`
 
-```bash
-# From the knowledgelink/ directory:
-uvicorn backend.main:app --reload --port 8000
-```
+**KnowledgeLink** is the productionized full-stack interface built around the trained GATCE model. It allows users to visually interact with the knowledge graph and understand the model's predictions.
 
-Then open **[http://localhost:8000](http://localhost:8000)** in your browser.
+### Key Capabilities
+- **Explainability**: Dives deeply into *why* the model made a prediction. It visualizes the **Attention Heatmap** and calculates the exact L1 (2-hop) and L2 (1-hop) influence specific neighboring edges had on the final output.
+- **Interactive Graph Visualization**: Uses D3.js to render force-directed subgraphs for interactive neighborhood exploration.
+- **Custom Dataset Training**: Includes a robust mechanism to upload arbitrary custom `.txt` edge lists through the UI. It dynamically dispatches new training jobs via **Modal** and seamlessly loads the newly trained checkpoints without restarting the server.
+- **Multi-Model Support**: Switch seamlessly between the default `fb15k-237` model and your custom uploaded ones.
 
-> **No checkpoint?** The app still works for graph exploration and entity search — only the Predict / Explain buttons will be unavailable until a checkpoint is placed.
-
----
-
-## API Reference
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| `GET`  | `/health` | Status: data loaded, model loaded, counts |
-| `GET`  | `/entities/search?q=<query>` | Fuzzy entity search |
-| `GET`  | `/relations` | All 237 relation types |
-| `GET`  | `/graph/{entity_id}?max_neighbors=40` | 1-hop subgraph |
-| `POST` | `/predict` | `{head_id, rel_id, topk}` → ranked predictions |
-| `POST` | `/explain` | `{head_id, rel_id, tail_id}` → attention maps |
-
-Interactive docs: **[http://localhost:8000/docs](http://localhost:8000/docs)**
-
----
-
-## How Explainability Works
-
-GATH is a **graph attention** model. Every layer computes an attention weight per edge, indicating how much each neighboring entity influenced the central node's embedding update.
-
-`explain()` traces edges flowing **into** the query entity, extracts per-layer sigmoid attention scores, and aggregates them into a single importance score per neighbor.
-
-The UI renders:
-1. **Attention Heatmap** — a `num_neighbors × num_layers` canvas grid colored by attention intensity
-2. **Subgraph Highlight** — explained neighbors turn gold on the D3 graph
-3. **Influence List** — ranked neighbors by mean attention across layers
-
----
-
-## Configuration
-
-Edit `backend/config.py` to match your training setup:
-
-```python
-class Config:
-    data_dir       = "data"          # path to FB15k-237 splits
-    checkpoint_path = "checkpoint.pt"
-
-    EMBED_DIM  = 200   # must match training
-    NUM_LAYERS = 6
-    NUM_HEADS  = 4
-    DROPOUT    = 0.3
-    CONV_DW    = 10    # ConvE reshape width
-```
+*For detailed instructions on running the web app, please refer to the `knowledgelink/README.md` file.*
