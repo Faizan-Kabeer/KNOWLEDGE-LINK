@@ -1,4 +1,4 @@
-# Pro-Max: Knowledge Graph Link Prediction
+# KnowledgeLink: An Explainable Framework Leveraging a Hybrid Graph Attention Encoder and Convolutional Decoder Model for Knowledge Graph Link Prediction
 
 This directory contains the core training implementation and the full-stack web application for the **GATCE (Graph Attention with Hadamard + ConvE)** Knowledge Graph link prediction project.
 
